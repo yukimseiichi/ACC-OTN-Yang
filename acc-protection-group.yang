@@ -9,20 +9,20 @@ module acc-protection-group {
     */
     typedef protection-type {
         type enumeration {
-            enum odu-sncp-i { 
-		value 0;
+	    enum odu-sncp-i { 
+	        value 0;
 	    }
-            enum odu-sncp-s { 
+	    enum odu-sncp-s { 
                 value 1;
             }
 	    enum vc-sncp { 
-		value 2;
+                value 2;
 	    }
 	    enum och-1-plus-1 { 
-		value 3;
+	        value 3;
 	    }
 	    enum msp-1-plus-1 {
-		value 4; 
+	        value 4; 
 	    }
             enum lag {
                 value 5; 
@@ -31,10 +31,10 @@ module acc-protection-group {
                 value 6; 
             }
 	    enum osu-sncp-i { 
-		value 7;
+	        value 7;
 	    }
 	    enum osu-sncp-n { 
-		value 8;
+	        value 8;
 	    }
             enum osu-sncp-s { 
                 value 9;
@@ -42,26 +42,26 @@ module acc-protection-group {
         }
     }
 	
-	typedef protection-type-eqpg{
-		type enumeration{
-			enum control{
-				value 0;
-				description "control 1+1";
-			}
-			enum crossconnect{
-				value 1;
-				description "crossconnect 1+1";
-			}
-			enum controlcrossconnect{
-				value 2;
-				description "controlcrossconnect 1+1";
-			}
-			enum power{
-				value 3;
-				description "power 1+1";
-			}
-		}
+    typedef protection-type-eq-pg{
+        type enumeration{
+	    enum control-1-plus-1{
+	        value 0;
+	        description "control-1-plus-1";
+	    }
+	    enum crossconnect-1-plus-1{
+	        value 1;
+                description "crossconnect-1-plus-1";
+            }
+            enum controlcrossconnect-1-plus-1{
+                value 2;
+                description "controlcrossconnect-1-plus-1";
+	    }
+            enum power-1-plus-1{
+                value 3;
+                description "power-1-plus-1";
+	    }
 	}
+    }
 	
     typedef switch-type {
         type enumeration {
@@ -104,19 +104,6 @@ module acc-protection-group {
         }
     }
 	
-	typedef protection-direction-eqpg {
-        type enumeration {
-            enum to-primary {
-                value 0;
-                description "to primary";
-            }
-            enum to-secondary {
-                value 1;
-                description "to secondary";
-            }
-        }
-    }
-	
     typedef reversion-mode {
         type enumeration {
             enum revertive {
@@ -129,56 +116,47 @@ module acc-protection-group {
             }
         }
     }
-    
     typedef switch-reason {
         type enumeration {
             enum no-switch {
                 value 0;
-                description "no switch";
+                description "no switch,only for pg";
             }
             enum sf-switch {
                 value 1;
-                description "SF switch";
+                description "SF switch,only for pg";
             }
             enum sd-switch {
                 value 2;
-                description "SD switch";
+                description "SD switch,only for pg";
             }
             enum manual-switch {
                 value 3;
-                description "manual switch";
+                description "manual switch,for pg and eq-pg";
             }
             enum force-switch {
                 value 4;
-                description "force switch";
+                description "force switch,only for pg";
             }
             enum cleared {
                 value 5;
-                description "cleared";
+                description "cleared,only for pg";
             }
             enum wait-for-restore {
                 value 6;
-                description "WTR";
+                description "WTR,only for pg";
             }
             enum lockout {
                 value 7;
-                description "lockout of protection";
+                description "lockout of protection,only for pg";
             }
+	    enum clearedsf-switch{
+	        value 8;
+		description "clearedsf-switch,only for eq-pg";
+	    }
         }
     }
 	
-	typedef switch-reason-eqpg {
-        type enumeration {
-			enum manual-switch{
-				value 0;
-				description "manual-switch";
-			}
-			enum clearedsf-switch{
-				value 1;
-				description "clearedsf-switch";
-			}
-		}
-	}
 
     /*
     * groupings
@@ -208,7 +186,6 @@ module acc-protection-group {
             type switch-type;
             description "switch type";
         }
-        
         leaf switch-reason {
             type switch-reason;
             config false;
@@ -253,40 +230,40 @@ module acc-protection-group {
         }
     }
 
-	grouping eqpg{
-		description
-			"eqpg";
-		leaf eqpg-id{
-			mandatory true;
-			type uint16;
-		}
-		leaf protection-type-eqpg{
-			mandatory true;
-			type protection-type-eqpg;
-		}
-		leaf switch-reason-eqpg{
-			type switch-reason-eqpg;
-		}
-		leaf protection-direction-eqpg{
-			mandatory true;
-			type protection-direction-eqpg;
-		}
-		leaf primary-eq{
-			mandatory true;
-			config false;
-			type string;
-		}
-		leaf secondary-eq{
-			mandatory true;
-			config false;
-			type string;
-		}
-		leaf selected-eq{
-			mandatory true;
-			config false;
-			type string;
-		}
+    grouping eq-pg{
+	description
+	"eq-pg";
+	leaf pg-id{
+	    mandatory true;
+	    type uint16;
+        }
+	leaf protection-type{
+	    mandatory true;
+	    type protection-type-eq-pg;
 	}
+	leaf switch-reason{
+	    type switch-reason;
+	}
+	leaf protection-direction{
+	    mandatory true;
+	    type protection-direction;
+	}
+	leaf primary-eq{
+	    mandatory true;
+	    config false;
+	    type string;
+	}
+	leaf secondary-eq{
+	    mandatory true;
+            config false;
+            type string;
+	}
+        leaf selected-eq{
+            mandatory true;
+            config false;
+            type string;
+	}
+    }
 			
 
     /*
@@ -301,16 +278,16 @@ module acc-protection-group {
         description "pgs";
     }
 	
-	container eqpgs {
-		list eqpg {
-			key 'eqpg-id';
-			uses eqpg;
-			description "eqpg";
-		}
-		description "eqpgs";
+    container eq-pgs {
+        list eq-pg {
+            key 'pg-id';
+            uses eq-pg;
+            description "eq-pg";
 	}
+        description "eq-pgs";
+    }
 
-   notification protection-switch-notification {
+    notification protection-switch-notification {
         leaf protection-switch-serial-no {
             mandatory true;
             type uint64;
@@ -318,8 +295,8 @@ module acc-protection-group {
         container pg {
             uses pg;
         }
-		container eqpg {
-            uses eqpg;
+        container eq-pg {
+            uses eq-pg;
         }
         description "protection switch notification";
     }
@@ -351,61 +328,61 @@ module acc-protection-group {
         }
     }
 	
-	rpc perform-eqprotection-command {
+    rpc perform-eq-protection-command {
         description
-            "eqprotection";
+            "eq-protection";
         input {
-            leaf eqpg-id {
+            leaf pg-id {
                 mandatory true;
                 type uint64;
-                description  "eqpg id";
+                description  "eqpg-id";
             }
 
-            leaf eqprotection-command {
+            leaf protection-command {
                 mandatory true;
-                type switch-reason-eqpg;
-                description "eqprotection command";
+                type switch-reason;
+                description "eq protection command";
             }
 
-            leaf eqprotection-direction {
+            leaf protection-direction {
                 mandatory true;
-                type protection-direction-eqpg;
-                description "eqprotection direction";
+                type protection-direction;
+                description "eq protection direction";
             }
         }
     }
+    
+    rpc get-protectiongrop {
+        description
+            "protectiongroup";
+        input {
+            leaf pg-id {
+                type uint64;
+                description "pg id";
+            }
+         }
+         output {
+             container pgs {
+                 uses pg;
+                 description "output pgs";
+             }
+         }
+    }	
 	
-	rpc get-protectiongrop {
-		description
-			"protectiongroup";
-		input {
-			leaf pg-id {
-				type uint64;
-				description "pg id";
-			}
-		}
-		output {
-			container pgs {
-				uses pg;
-				description "output pgs";
-			}
-		}
-	}	
-	
-	rpc get-eqprotectiongrop {
-		description
-			"eqprotectiongroup";
-		input {
-			leaf eqpg-id {
-				type uint64;
-				description "eqpg id";
-			}
-		}
-		output {
-			container eqpgs {
-				uses eqpg;
-				description "output eqpgs";
-			}
-		}
-	}	
+    rpc get-eq-protectiongrop {
+	description
+            "eq-protectiongroup";
+        input {
+            leaf pg-id {
+                type uint64;
+                description "pg id";
+	    }
+        }
+	output {
+	    container eq-pgs {
+                uses eq-pg;
+                description "output eq pgs";
+	    }
+        }
+    }	
 }
