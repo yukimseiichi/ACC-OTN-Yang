@@ -303,4 +303,78 @@ module acc-alarms {
             }
         }
     }
+	
+    rpc get-alarms {
+        description "get-alarms";
+        output {
+            container alarms {
+                uses alarms;
+                description "output alarms";
+            }
+            container tcas {
+                uses tcas;
+                description "output tcas";
+            }
+        }
+    }
+	
+	rpc get-alarm-mask-states {
+	    input {
+		    leaf object-name {
+			    mandatory true;
+				type string {
+				    length "1..64";
+				}
+				description "alarm object-name";
+			}
+			leaf object-type {
+			    mandatory true;
+				type string {
+				    length "1..64";
+				}
+				description "alarm object-type";
+			}     
+			leaf alarm-code {
+			    mandatory true;
+				type string {
+				    length "1..64";
+				}
+				description "alarm alarm-code";
+			}
+		}
+		output {
+			container alarm-mask-states {
+			    list alarm-mask-state {
+				    key 'object-name alarm-code';
+					min-elements 1;
+					leaf object-name {
+					    type string {
+						    length "1..64";
+						}
+						mandatory true; 
+						description "alarm-mask-state object-name";
+				    }
+					leaf alarm-code {
+					    type string {
+						    length "1..64";
+						}
+				    mandatory true;
+					description "alarm-mask-state alarm-code";
+                    }
+                    leaf object-type {
+                        type string {
+                            length "1..64";
+                        }
+                        mandatory true;
+                        description "alarm-mask-state object-type";
+                    }
+                    leaf mask-state {
+                        type boolean;
+                        mandatory true;
+                        description "true is mask";
+					}
+                }
+            }
+        } 
+    }		
 }        
