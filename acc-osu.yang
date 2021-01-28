@@ -1,22 +1,20 @@
-module acc-osu {
+module acc-eos {
     yang-version 1.1;
-    namespace "urn:ccsa:yang:acc-osu";
-    prefix acc-osu;
-    import ietf-yang-types {
-        prefix yang;
+    namespace "urn:ccsa:yang:acc-eos";
+    prefix acc-eos;
+
+    import acc-devm { 
+        prefix acc-devm; 
     }
-    import acc-yang-types {
-         prefix acc-type; 
+    import acc-eth {
+        prefix acc-eth;
     }
-    
-    import acc-devm {
-        prefix acc-devm;
+    import acc-sdh {
+        prefix acc-sdh;
     }
-    
     import acc-connection {
         prefix acc-con;
     }
-
     import acc-otn {
         prefix acc-otn;
     }
@@ -28,221 +26,47 @@ module acc-osu {
     import acc-protection-group {
         prefix acc-pg;
     }
-
-    revision 2020-12-02 {
-        description "init v1.0";
-    }
-
-    /*
-   * common types
-   */
-    identity OSU {
-        base acc-type:layer-protocol-name;
-    }
-   
-    typedef tcm-mode-type {
-        type enumeration {
-            enum operational{
-                value 0;
-                description "enable TCM";
-            }
-            enum monitor {
-                value 1;
-                description "monitor TCM";
-            }
-            enum transparent{
-                value 2;
-                description "disable TCM";
-            }
-        }
-    }
-
-    /*
-   * groupings
-   */
+	import acc-sdh {
+	    prefix acc-sdh-ftp;
+	}
     
 
-    augment "/acc-devm:ptps/acc-devm:ptp" {
-        when "acc-devm:layer-protocol-name = 'OSU'";
-        container osu-ptp-pac {
-		leaf-list osu-signal-type {
-			config false;
-			min-elements 1;
-			type acc-enum:signal-type;
-		}
-		leaf-list adaptation-type {
-			config false;
-			type acc-enum:adaptation-type;
-		}
-        }
+    revision 2019-02-13 {
+        description
+            "Initial revision.";
+        reference
+            "xxx";
     }
 
-    augment "/acc-devm:ftps/acc-devm:ftp" {
-        when "acc-devm:layer-protocol-name = 'OSU'";
-        container osu-ftp-pac {
-            leaf available-tpn-number {
-                    mandatory true;
-                    type uint64;
-		    description "可用TPN 0~1000";
-		}
-		leaf total-band-width {
-			mandatory true;
-			type uint64;
-			description "所支持的OSU基准带宽单元(10.4Mbps)数量，与对应ODU类型相关";
-		}
-		leaf available-band-width {
-			mandatory true;
-			type uint64;
-			description "当前可用OSU基准带宽单元(10.4Mbps)数量";
-		}
+    augment "/acc-devm:ftps/acc-devm:ftp/acc-eth:eth-ftp-pac" {
+        when "acc-eth:mapping-type = 'acc-eth:EoS'";
+        container vcg-pac {
+            uses acc-sdh:vcg-pac;
+            description "Virtual concatenation group";
         }
     }
-
-    augment "/acc-devm:ctps/acc-devm:ctp" {
-        when "acc-devm:layer-protocol-name = 'OSU'";
-        container osu-ctp-pac {
-            leaf osu-signal-type {
-                type acc-enum:signal-type;
-                description "";
-            }
-            leaf adaptation-type {
-                type acc-enum:adaptation-type;
-                description "";
-            }
-		leaf tpn {
-			mandatory true;
-			type uint64;
-			description "TPN的编号0～1000";
+	
+	grouping eth-ftp-ctp {
+	    leaf eth-ftp-ctp {
+		    type string;
+			description "ETH FTP的 子CTP";
 		}
-		leaf bandwidth {
-			config false;
-			type uint64;
-			description "CTP占用的OSU基准单元的数量";
+		leaf ul-sdh-ftp-ctp {
+		    type string;
+			description "上联 主用 SDH FTP的CTP";
 		}
-		leaf pm-trail-trace-actual-tx {
-			type string;
+		leaf ul-sdh-ftp-ctp-p {
+		    type string;
+			description "上联 保护 SDH FTP的CTP";
 		}
-		leaf pm-trail-trace-actual-rx {
-			type string;
-		}
-		leaf pm-trail-trace-expected-tx {
-			type string;
-		}
-		leaf tcm1-mode {
-			type tcm-mode-type;
-		}
-		leaf tcm2-mode {
-			type tcm-mode-type;
-		}
-        }
-    }
-
-    rpc osu-two-way-dm {
-        input {
-            leaf ctp-name {
-	    	mandatory true;
-                type string;
-            }
-            leaf dm-type {
-	    	mandatory true;
-                type string;
-                description "PM or TCM1";
-            }
-        }
-        output {
-            leaf osu-delay {
-	    	mandatory true;
-                type uint64;
-            }
-        }
-    }
-
-
-
-    rpc create-eo-osu-connection{
-        input {uses acc-con:create-connection;
-            leaf service-mapping-mode {
-                type acc-enum:adaptation-type;
-            }
-            leaf uni-protection-type {
-                type acc-pg:protection-type;
-                description "default lag";
-            }
-            leaf nni-protection-type {
-                type acc-pg:protection-type;
-            }
-            leaf nni2-protection-type {
-                type acc-pg:protection-type;
-            }
-            container uni {
-                leaf uni-ptp-name {
-                    type string;
-                }
-                leaf second-uni-ptp-name {
-                    type string;
-                }
-				leaf client-signal-type {
-					type acc-enum:signal-type;
-				}
-            }
-
-            container primary-nni {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选。对于UNI-NNI业务， accessAction=PUSH_POP， 对于NNI-NNI则 pushpop or exchange";
-                }
-                description "primary nni,必选";
-            }
-            container secondary-nni {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选,对于UNI-NNI业务， accessAction=PUSH_POP";
-                }
-                description "ETH带保护模式，可选";
-            }
-            container primary-nni2 {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选。对于NNI-NNI业务，accessAction=KEEP或EXCHANGE";
-                }
-                description "NNI-NNI不带保护，可选";
-            }
-            container secondary-nni2 {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选,对于NNI-NNI业务，accessAction=KEEP或EXCHANGE";
-                }
-                description "NNI-NNI带保护，可选";
-            }
-        }
-        output {
-            container connection {
-                uses acc-con:connection;
-            }
-            container create-component {
-                leaf-list ftp-name {
-                    type string {
-                        length "1..64";
-                    }
-                }
-                leaf-list ctp-name {
-                    type string {
-                        length "1..64";
-                    }
-                }
-            }
-        }
-    }
-
-    rpc create-osu-connection {
+	}
+	
+    rpc create-eos-connection {
         input {
             uses acc-con:create-connection;
             leaf service-mapping-mode {
                 type acc-enum:adaptation-type;
+                description "基于SDH FTP客户信号类型，STM-1/STM-4=GMP，STM-16/STM-64=CBR_BMP";
             }
             leaf uni-protection-type {
                 type acc-pg:protection-type;
@@ -251,52 +75,69 @@ module acc-osu {
             leaf nni-protection-type {
                 type acc-pg:protection-type;
             }
-            leaf nni2-protection-type {
-                type acc-pg:protection-type;
-            }
-            container uni {
+            container eth-uni {
                 leaf uni-ptp-name {
                     type string;
                 }
                 leaf second-uni-ptp-name {
                     type string;
+                    description "可选，用于与客户设备之间建立LAG保护（非负载均衡，单端保护）";
                 }
-		leaf client-signal-type {
-			type acc-enum:signal-type;
-		}
+                container client-vlan-spec {
+                  when "../../service-type = 'EVPL'";
+                    uses acc-con:vlan-spec;
+                    description "只适用于EVPL，指定C-VLAN，用于客户Vlan与运营商Vlan的匹配，无需携带accessAction。不携带该参数时表示端口匹配";
+                }
             }
-
             container primary-nni {
                 uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选。对于UNI-NNI业务， accessAction=PUSH_POP， 对于NNI-NNI则 pushpop or exchange";
-                }
                 description "primary nni,必选";
             }
             container secondary-nni {
                 uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选,对于UNI-NNI业务， accessAction=PUSH_POP";
-                }
-                description "带保护模式，可选";
+                description "业务带保护模式，可选";
             }
-            container primary-nni2 {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选。对于NNI-NNI业务，accessAction=KEEP或EXCHANGE";
+           
+            container eos-pac {
+                leaf sdh-signal-type {
+                    type acc-enum:signal-type;
                 }
-                description "NNI-NNI不带保护，可选";
-            }
-            container secondary-nni2 {
-                uses acc-otn:nni;
-                container ftp-vlan-spec {
-                    uses acc-con:vlan-spec;
-                    description "EVPL必须下发，对于其它业务可选,对于NNI-NNI业务，accessAction=KEEP或EXCHANGE";
+                leaf vc-type {
+                    mandatory true;
+                    type acc-enum:sdh-switch-type;
                 }
-                description "NNI-NNI带保护，可选";
+                leaf-list mapping-path {
+                    min-elements 1;
+                    type string {
+                        length "1..64";
+                    }
+                }
+                leaf sdh-signal-type-protect {
+                    type acc-enum:signal-type;
+                }
+                leaf-list mapping-path-protect {
+                    type string {
+                        length "1..64";
+                    }
+                }
+                leaf lcas {
+                    type boolean;
+                    default false;
+                }
+                leaf hold-off {
+                    type uint32;
+                    default 0;
+                    description "unit: ms";
+                }
+                leaf wtr {
+                    type uint32;
+                    default 300;
+                    description "unit: s";
+                }
+                leaf tsd {
+                    type boolean;
+                    default false;
+                }
             }
         }
         output {
@@ -304,6 +145,10 @@ module acc-osu {
                 uses acc-con:connection;
             }
             container create-component {
+                leaf-list vc-connection-name {
+                    type string;
+					min-elements 0;
+                }
                 leaf-list ftp-name {
                     type string {
                         length "1..64";
@@ -313,27 +158,151 @@ module acc-osu {
                     type string {
                         length "1..64";
                     }
-                }                
+                }              
             }
         }
     }
-
-    rpc modify-osu-connection-capacity {
+    rpc modify-vcg-connection-capacity {
         input {
-            leaf ctp-name {
-	    	mandatory true;
+            leaf eth-ftp-name {
+                mandatory true;
+                type string {
+                    length "1..64";
+                }
+                description
+                    "The name of eth ftp name.";
+            }
+            leaf sdh-ftp-name {
+                mandatory true;
+                type string {
+                    length "1..64";
+                }
+                description
+                    "The name of sdh ftp name.";
+            }
+            leaf sdh-protect-ftp-name {
+                type string {
+                    length "1..64";
+                }
+                description
+                    "The name of the protect sdh ftp name.";
+            }
+            leaf-list mapping-path {
+                min-elements 1;
+                type string {
+                    length "1..64";
+                }
+                description
+                    "The mapping path list.";
+            }
+            leaf-list mapping-path-protected {
+                type string {
+                    length "1..64";
+                }
+                description
+                    "The protected mapping path list.";
+            }
+        }
+        output {
+            leaf-list connection-name {
                 type string;
             }
-            uses acc-con:capacity;
-            leaf timer {
-	    	mandatory true;
-                type uint64;
-                description "default 60   range:1~1023";
-            }
-            leaf action {
-	    	mandatory true;
-                type acc-otn:modify-action;
+            leaf-list ctp-name {
+                type string {
+                    length "1..64";
+                }
             }
         }
     }
+	
+    rpc get-eos-connection-detail {
+        input {
+	    leaf name {
+	        type string;
+		    description "正常管控下发的connection，不支持查询动态衍生出的connec";
+	    }
+	}
+	output {
+            uses acc-con:create-connection;
+	    leaf service-mapping-mode {
+                type acc-enum:adaptation-type;
+		default "GFP-F";
+            }
+            leaf uni-protection-type {
+                type acc-pg:protection-type;
+                description "default lag?";
+            }
+            leaf nni-protection-type {
+                type acc-pg:protection-type;
+            }
+            leaf nni2-protection-type {
+                type acc-pg:protection-type;
+            }
+			
+            container eos-uni {
+                leaf uni-ptp-name {
+                    type string {
+                        length "1..64";
+                    }
+		}
+		container client-vlan-spec {
+		    when "../../service-type = 'EVPL'";
+		        uses acc-con:vlan-spec;
+			description "只适用于EVPL，指定C-VLAN，用于客户Vlan与运营商Vlan的匹配，无需携带accessAction。不携带该参数时表示端口匹配";
+		}
+            }
+			          
+            container primary-nni {
+                uses acc-otn:nni;
+                container sdh-ftp {
+                    uses acc-sdh:sdh-ftp;
+                }
+                description "primary nni, mandatory true";
+            }
+           
+	    container secondary-nni {
+                uses acc-otn:nni;
+                container sdh-ftp {
+                    uses acc-sdh:sdh-ftp;
+                }
+                description "only for service with protection";
+            }
+            					
+	    container create-component {
+	        leaf eth-ptp-ctp {
+		    type string;
+		    description "客户侧 PTP 的子 CTP";
+		}
+		leaf ul-eth-ftp {
+		    type string;
+		    description "上联 ETH FTP";
+		}
+		leaf ul-eth-ftp-ctp {
+		    type string;
+		    description "上联 ETH FTP的 子CTP";
+		}
+		leaf ul-sdh-ftp {
+		    type string;
+		    description "上联 主用 SDH FTP";
+		}
+		leaf ul-sdh-ftp-p {
+		    type string;
+		    description "上联 保护 SDH FTP";
+		}
+		leaf ul-odu-ctp {
+		    type string;
+		    description "上联 主用 ODU CTP";
+		}
+		leaf ul-odu-ctp-p {
+		    type string;
+		    description "上联 保护口的 ODU CTP（有保护则上报）";
+		}
+		list eth-ftp-ctps {
+		    min-elements 1;
+		    uses eth-ftp-ctp;
+		    description "多个eth-ftp-ctp对应多个vc时隙";
+		}
+	    }
+	}
+    }			    
 }
