@@ -292,12 +292,18 @@ module acc-protection-group {
             mandatory true;
             type uint64;
         }
-        container pg {
-            uses pg;
-        }
-        container eq-pg {
-            uses eq-pg;
-        }
+	choice pg-or-eq-pg {
+	    case pg {
+	        container pgs {
+		    uses pg;
+		}
+	    }
+	    case eq-pg {
+		container eq-pgs {
+	            uses eq-pg;
+		}
+	    }
+	}
         description "protection switch notification";
     }
 
@@ -351,38 +357,4 @@ module acc-protection-group {
             }
         }
     }
-    
-    rpc get-protectiongrop {
-        description
-            "protectiongroup";
-        input {
-            leaf pg-id {
-                type uint64;
-                description "pg id";
-            }
-         }
-         output {
-             container pgs {
-                 uses pg;
-                 description "output pgs";
-             }
-         }
-    }	
-	
-    rpc get-eq-protectiongrop {
-	description
-            "eq-protectiongroup";
-        input {
-            leaf pg-id {
-                type uint64;
-                description "pg id";
-	    }
-        }
-	output {
-	    container eq-pgs {
-                uses eq-pg;
-                description "output eq pgs";
-	    }
-        }
-    }	
 }
