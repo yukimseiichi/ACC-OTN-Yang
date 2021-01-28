@@ -26,6 +26,9 @@ module acc-eos {
     import acc-protection-group {
         prefix acc-pg;
     }
+    import acc-sdh {
+	prefix acc-sdh-ftp;
+    }
     
 
     revision 2019-02-13 {
@@ -42,6 +45,22 @@ module acc-eos {
             description "Virtual concatenation group";
         }
     }
+	
+	grouping eth-ftp-ctp {
+	    leaf eth-ftp-ctp {
+		    type string;
+			description "ETH FTP的 子CTP";
+		}
+		leaf ul-sdh-ftp-ctp {
+		    type string;
+			description "上联 主用 SDH FTP的CTP";
+		}
+		leaf ul-sdh-ftp-ctp-p {
+		    type string;
+			description "上联 保护 SDH FTP的CTP";
+		}
+	}
+	
     rpc create-eos-connection {
         input {
             uses acc-con:create-connection;
@@ -195,4 +214,95 @@ module acc-eos {
             }
         }
     }
+	
+    rpc get-eos-connection-detail {
+        input {
+	    leaf name {
+	        type string;
+		    description "正常管控下发的connection，不支持查询动态衍生出的connec";
+	    }
+	}
+	output {
+            uses acc-con:create-connection;
+	    leaf service-mapping-mode {
+                type acc-enum:adaptation-type;
+		default "GFP-F";
+            }
+            leaf uni-protection-type {
+                type acc-pg:protection-type;
+                description "default lag?";
+            }
+            leaf nni-protection-type {
+                type acc-pg:protection-type;
+            }
+            leaf nni2-protection-type {
+                type acc-pg:protection-type;
+            }
+			
+            container eos-uni {
+                leaf uni-ptp-name {
+                    type string {
+                        length "1..64";
+                    }
+		}
+		container client-vlan-spec {
+		    when "../../service-type = 'EVPL'";
+		        uses acc-con:vlan-spec;
+			description "只适用于EVPL，指定C-VLAN，用于客户Vlan与运营商Vlan的匹配，无需携带accessAction。不携带该参数时表示端口匹配";
+		}
+            }
+			          
+            container primary-nni {
+                uses acc-otn:nni;
+                container sdh-ftp {
+                    uses acc-sdh:sdh-ftp;
+                }
+                description "primary nni, mandatory true";
+            }
+           
+	    container secondary-nni {
+                uses acc-otn:nni;
+                container sdh-ftp {
+                    uses acc-sdh:sdh-ftp;
+                }
+                description "only for service with protection";
+            }
+            					
+	    container create-component {
+	        leaf eth-ptp-ctp {
+		    type string;
+		    description "客户侧 PTP 的子 CTP";
+		}
+		leaf ul-eth-ftp {
+		    type string;
+		    description "上联 ETH FTP";
+		}
+		leaf ul-eth-ftp-ctp {
+		    type string;
+		    description "上联 ETH FTP的 子CTP";
+		}
+		leaf ul-sdh-ftp {
+		    type string;
+		    description "上联 主用 SDH FTP";
+		}
+		leaf ul-sdh-ftp-p {
+		    type string;
+		    description "上联 保护 SDH FTP";
+		}
+		leaf ul-odu-ctp {
+		    type string;
+		    description "上联 主用 ODU CTP";
+		}
+		leaf ul-odu-ctp-p {
+		    type string;
+		    description "上联 保护口的 ODU CTP（有保护则上报）";
+		}
+		list eth-ftp-ctps {
+		    min-elements 1;
+		    uses eth-ftp-ctp;
+		    description "多个eth-ftp-ctp对应多个vc时隙";
+		}
+	    }
+	}
+    }			    
 }
