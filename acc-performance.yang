@@ -17,6 +17,20 @@ module acc-performance {
         description "Initial revision.";
         reference "RFC xxx";
     }
+	
+	typedef pmstate{
+	    type enumeration {
+            enum true {
+                value 0;
+                description "TRUE";
+            }
+            enum false {
+                value 1;
+                description "FALSE";
+            }
+	    }
+	}
+	
     /*
     * Groupings
     */   
@@ -86,6 +100,33 @@ module acc-performance {
         }
         description "performances";
     }
+	
+    grouping pm-state-lists {
+        list pm-state-list {
+	    config false;
+            leaf object-name {
+                type string {
+                    length "1..64";
+                }
+                description "object-name";
+            }
+            leaf pm-parameter-name {
+                type string {
+                    length "1..64";
+                }
+                description "pm-parameter-name";
+            }
+            leaf granularity {
+                type acc-type:granularity;
+                description "15min or 24h";
+            }
+	    leaf pm-state {
+	        type pmstate;
+		description "pm-state";
+	    }
+	}
+    }
+	
     /*
     * The data tree
     */
@@ -97,34 +138,98 @@ module acc-performance {
     * Operations
     */
     rpc get-history-performance-monitoring-data {
-            input {
-                leaf start-time {
-                    mandatory true;
-                    type yang:date-and-time;
-                }
-                leaf end-time {
-                    mandatory true;
-                    type yang:date-and-time;
-                }
-                leaf object-name {
-                    type string {
-                        length "1..64";
-                    }
-                }
-                leaf granularity {
-                    mandatory true;
-                    type acc-type:granularity;
-                }
-                leaf pm-parameter-name {
-                    type string {
-                        length "1..64";
-                    }
+        input {
+            leaf start-time {
+                mandatory true;
+                type yang:date-and-time;
+            }
+            leaf end-time {
+                mandatory true;
+                type yang:date-and-time;
+            }
+            leaf object-name {
+                type string {
+                    length "1..64";
                 }
             }
-            output {
-                container performances {
-                    uses performances;
-                } 
+            leaf granularity {
+                mandatory true;
+                type acc-type:granularity;
             }
+            leaf pm-parameter-name {
+                type string {
+                    length "1..64";
+                }
+            }
+        }
+        output {
+            container performances {
+                uses performances;
+            } 
+        }
+    }
+	
+    rpc set-pm-state {
+	input {
+	    leaf object-name {
+	        mandatory true;
+		type string {
+                    length "1..64";
+                }
+		description "object-name";
+            }
+	    leaf object-type {
+		mandatory true;
+                type string {
+                    length "1..64";
+                }
+                description "object-type";
+            }
+	    leaf granularity {
+                type acc-type:granularity;
+		description "granularity";
+            }
+	    leaf pm-parameter-name {
+                type string {
+                    length "1..64";
+                }
+            }
+	    leaf pm-state {
+		mandatory true;
+		type pmstate;
+		description "pm state";
+	    }
+	}
+	output {
+	    container pm-state-lists {
+		uses pm-state-lists;
+	    }
+	}
+    }
+	
+    rpc get-all-pm-state {
+        input {
+	    leaf object-name {
+	        mandatory true;
+		type string {
+                    length "1..64";
+                }
+		description "object-name";
+            }
+	    leaf granularity {
+                type acc-type:granularity;
+		description "granularity";
+            }
+	    leaf pm-parameter-name {
+                type string {
+                    length "1..64";
+                }
+            }
+	}
+	output {
+	    container pm-state-lists {
+	        uses pm-state-lists;
+	    }
+        }
     }
 }        
